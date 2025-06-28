@@ -8,8 +8,7 @@ on:
         required: true
         default: 'stop'
       private_ip:
-        description: 'Private IP address of the EC2 instance (e.g., 
-10.0.1.25)'
+        description: 'Private IP address of the EC2 instance'
         required: true
       tag_key:
         description: 'Tag key (e.g., Schedule)'
