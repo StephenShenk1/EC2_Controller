@@ -1,4 +1,4 @@
-name: EC2 Start/Stop by Tag and IP
+name: EC2 Start/Stop
 
 on:
   workflow_dispatch:
