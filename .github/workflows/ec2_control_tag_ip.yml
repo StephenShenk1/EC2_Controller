@@ -27,20 +27,16 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1  # Change as needed
+        aws-region: ap-south-1  
 
     - name: Get EC2 instance ID by IP and Tag
       id: get_instance
       run: |
-        echo "🔍 Searching for instance with IP ${{ 
-github.event.inputs.private_ip }} and Tag ${{ github.event.inputs.tag_key 
-}}=${{ github.event.inputs.tag_value }}"
-        
+        echo "🔍 Searching for instance with IP: ${{ github.event.inputs.private_ip }} and Tag: ${{ github.event.inputs.tag_key }}=${{ github.event.inputs.tag_value }}"
+
         INSTANCE_ID=$(aws ec2 describe-instances \
-          --filters "Name=private-ip-address,Values=${{ 
-github.event.inputs.private_ip }}" \
-                    "Name=tag:${{ github.event.inputs.tag_key 
-}},Values=${{ github.event.inputs.tag_value }}" \
+          --filters "Name=private-ip-address,Values=${{ github.event.inputs.private_ip }}" \
+                    "Name=tag:${{ github.event.inputs.tag_key }},Values=${{ github.event.inputs.tag_value }}" \
           --query "Reservations[*].Instances[*].InstanceId" \
           --output text)
 
@@ -49,7 +45,7 @@ github.event.inputs.private_ip }}" \
           exit 1
         fi
 
-        echo "✅ Found instance: $INSTANCE_ID"
+        echo "✅ Found EC2 instance: $INSTANCE_ID"
         echo "instance_id=$INSTANCE_ID" >> $GITHUB_OUTPUT
 
     - name: Start or Stop EC2 instance
@@ -58,11 +54,11 @@ github.event.inputs.private_ip }}" \
         ACTION="${{ github.event.inputs.action }}"
 
         if [ "$ACTION" == "start" ]; then
-          echo "🚀 Starting instance $INSTANCE_ID..."
-          aws ec2 start-instances --instance-ids $INSTANCE_ID
+          echo "🚀 Starting EC2 instance: $INSTANCE_ID"
+          aws ec2 start-instances --instance-ids "$INSTANCE_ID"
         elif [ "$ACTION" == "stop" ]; then
-          echo "🛑 Stopping instance $INSTANCE_ID..."
-          aws ec2 stop-instances --instance-ids $INSTANCE_ID
+          echo "🛑 Stopping EC2 instance: $INSTANCE_ID"
+          aws ec2 stop-instances --instance-ids "$INSTANCE_ID"
         else
           echo "❌ Invalid action: $ACTION"
           exit 1
