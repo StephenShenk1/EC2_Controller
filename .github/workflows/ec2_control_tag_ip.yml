@@ -1,0 +1,71 @@
+name: EC2 Start/Stop by Tag and IP
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform (start or stop)'
+        required: true
+        default: 'stop'
+      private_ip:
+        description: 'Private IP address of the EC2 instance (e.g., 
+10.0.1.25)'
+        required: true
+      tag_key:
+        description: 'Tag key (e.g., Schedule)'
+        required: true
+      tag_value:
+        description: 'Tag value (e.g., Start or Stop)'
+        required: true
+
+jobs:
+  ec2_control:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1  # Change as needed
+
+    - name: Get EC2 instance ID by IP and Tag
+      id: get_instance
+      run: |
+        echo "🔍 Searching for instance with IP ${{ 
+github.event.inputs.private_ip }} and Tag ${{ github.event.inputs.tag_key 
+}}=${{ github.event.inputs.tag_value }}"
+        
+        INSTANCE_ID=$(aws ec2 describe-instances \
+          --filters "Name=private-ip-address,Values=${{ 
+github.event.inputs.private_ip }}" \
+                    "Name=tag:${{ github.event.inputs.tag_key 
+}},Values=${{ github.event.inputs.tag_value }}" \
+          --query "Reservations[*].Instances[*].InstanceId" \
+          --output text)
+
+        if [ -z "$INSTANCE_ID" ]; then
+          echo "❌ No instance found with the given IP and tag."
+          exit 1
+        fi
+
+        echo "✅ Found instance: $INSTANCE_ID"
+        echo "instance_id=$INSTANCE_ID" >> $GITHUB_OUTPUT
+
+    - name: Start or Stop EC2 instance
+      run: |
+        INSTANCE_ID="${{ steps.get_instance.outputs.instance_id }}"
+        ACTION="${{ github.event.inputs.action }}"
+
+        if [ "$ACTION" == "start" ]; then
+          echo "🚀 Starting instance $INSTANCE_ID..."
+          aws ec2 start-instances --instance-ids $INSTANCE_ID
+        elif [ "$ACTION" == "stop" ]; then
+          echo "🛑 Stopping instance $INSTANCE_ID..."
+          aws ec2 stop-instances --instance-ids $INSTANCE_ID
+        else
+          echo "❌ Invalid action: $ACTION"
+          exit 1
+        fi
+
