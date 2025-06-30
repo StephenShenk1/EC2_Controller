@@ -1,7 +1,7 @@
 import boto3
 
 def lambda_handler(event, context):
-    ec2 = boto3.client('ec2', region_name='ap-south-1')  # Change region as needed
+    ec2 = boto3.client('ec2', region_name='eu-west-2')  # Change region as needed
 
     # Filter EC2 instances with tag Schedule=Start
     filters = [{
