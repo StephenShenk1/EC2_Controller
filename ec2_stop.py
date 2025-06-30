@@ -1,7 +1,7 @@
 import boto3
 
 def lambda_handler(event, context):
-    ec2 = boto3.client('ec2', region_name='ap-south-1')  
+    ec2 = boto3.client('ec2', region_name='eu-west-2')  
     filters = [{
         'Name': 'tag:AutoManage',
         'Values': ['True']
